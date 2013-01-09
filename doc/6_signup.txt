@@ -1,0 +1,160 @@
+0. Slide 34
+1. Stop server
+2. rake db:reset
+3. rake db:test:prepare
+4. Test case for signup
+describe "signup" do
+
+    before { visit signup_path }
+
+    let(:submit) { "Create my account" }
+
+    describe "with invalid information" do
+      it "should not create a user" do
+        expect { click_button submit }.not_to change(User, :count)
+      end
+    end
+
+    describe "with valid information" do
+      before do
+        fill_in "Name",         with: "Example User"
+        fill_in "Email",        with: "user@example.com"
+        fill_in "Password",     with: "foobar"
+        fill_in "Confirmation", with: "foobar"
+      end
+
+      it "should create a user" do
+        expect { click_button submit }.to change(User, :count).by(1)
+      end
+    end
+  end
+5. Look at fill_in, click_button, expect { click_button submit }.to change(User, :count).by(1)
+6. form_for helper method - take ActiveRecord object and build form using its attributes
+7. new.html.erb
+<% provide(:title, 'Sign up') %>
+<h1>Sign up</h1>
+
+<div class="row">
+  <div class="span6 offset3">
+    <%= form_for(@user) do |f| %>
+
+      <%= f.label :name %>
+      <%= f.text_field :name %>
+
+      <%= f.label :email %>
+      <%= f.text_field :email %>
+
+      <%= f.label :password %>
+      <%= f.password_field :password %>
+
+      <%= f.label :password_confirmation, "Confirmation" %>
+      <%= f.password_field :password_confirmation %>
+
+      <%= f.submit "Create my account", class: "btn btn-large btn-primary" %>
+    <% end %>
+  </div>
+</div>
+8. bundle exec rspec spec/requests/user_pages_spec.rb -e "signup page"
+9. Change Controller
+  def new
+    @user = User.new
+  end
+10. Add following styles to custom.css.scss
+/* forms */
+
+input, textarea, select, .uneditable-input {
+  border: 1px solid #bbb;
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  @include box_sizing;
+}
+
+input {
+  height: auto !important;
+}
+11. Look at form in Browser and look at the html source code for form
+12. Add new action in Controller
+  def create
+    @user = User.new(params[:user])
+    if @user.save
+      # Handle a successful save.
+    else
+      render 'new'
+    end
+  end
+13. @user = User.new(params[:user]) === @user = User.new(name: "Foo Bar", email: "foo@invalid", password: "foo", password_confirmation: "bar")
+14. Error show
+add new partial - app/views/shared/_error_messages.html.erb
+<% if @user.errors.any? %>
+  <div id="error_explanation">
+    <div class="alert alert-error">
+      The form contains <%= pluralize(@user.errors.count, "error") %>.
+    </div>
+    <ul>
+    <% @user.errors.full_messages.each do |msg| %>
+      <li>* <%= msg %></li>
+    <% end %>
+    </ul>
+  </div>
+<% end %>
+15. Add this partial to form - new.html.erb
+<% provide(:title, 'Sign up') %>
+<h1>Sign up</h1>
+
+<div class="row">
+  <div class="span6 offset3">
+    <%= form_for(@user) do |f| %>
+      <%= render 'shared/error_messages' %>
+      .
+      .
+      .
+    <% end %>
+  </div>
+</div>
+16. Add following style to css
+#error_explanation {
+  color: #f00;
+  ul {
+    list-style: none;
+    margin: 0 0 18px 0;
+  }
+}
+
+.field_with_errors {
+  @extend .control-group;
+  @extend .error;
+ }
+17. Change create action in user controller
+ def create
+    @user = User.new(params[:user])
+    if @user.save
+      flash[:success] = "Welcome to the Ruby in Rails Training!"
+      redirect_to @user
+    else
+      render 'new'
+    end
+  end
+18. Flash scope
+19. application.html.erb
+<!DOCTYPE html>
+<html>
+  .
+  .
+  .
+  <body>
+    <%= render 'layouts/header' %>
+    <div class="container">
+      <% flash.each do |key, value| %>
+        <div class="alert alert-<%= key %>"><%= value %></div>
+      <% end %>
+      <%= yield %>
+      <%= render 'layouts/footer' %>
+      <%= debug(params) if Rails.env.development? %>
+    </div>
+    .
+    .
+    .
+  </body>
+</html>
+20. 

@@ -1,0 +1,115 @@
+1. Slide 31, 32
+2. git checkout -b sign-up
+3. Adding debug information to site - application.html.erb
+  <body>
+    <%= render 'layouts/header' %>
+    <div class="container">
+      <%= yield %>
+      <%= render 'layouts/footer' %>
+      <%= debug(params) if Rails.env.development? %>
+    </div>
+  </body>
+4. Add following styles in custom.css
+/* miscellaneous */
+
+.debug_dump {
+  clear: both;
+  float: left;
+  width: 100%;
+  margin-top: 45px;
+  -moz-box-sizing: border-box; 
+  -webkit-box-sizing: border-box; 
+  box-sizing: border-box;
+}
+
+5. Enviornment
+	a. rails console # dev enviornment
+	b. Rails.env
+	c. Rails.env.development?
+	d. Rails.env.test?
+	f. CLOSE CONSOLE ENVIORNMENT
+	e. rails console test
+	f. Rails.env
+	g. rails server --environment production
+	h. bundle exec rake db:migrate RAILS_ENV=production
+	i. heroku run console
+	j. Rails.env
+6. Slide 33
+7. User as REST resource - change route.rb -> replace get "users/new" with resources :users
+8. Now it will complain about missing action
+9. Add missing action to controller
+def show
+    @user = User.find(params[:id])
+  end
+10. Add missing how.html.erb file
+<% provide(:title, @user.name) %>
+<h1><%= @user.name %></h1>
+11. Understand params[:id]
+
+Factories for sample data
+0.
+describe "profile page" do
+  # Code to make a user variable
+  before { visit user_path(user) }
+
+  it { should have_selector('h1',    text: user.name) }
+  it { should have_selector('title', text: user.name) }
+end
+1. Add factory girl gem in Gem file - provide DSL
+group :test do
+  gem 'capybara', '1.1.2'
+  gem 'rb-fchange', '0.0.5'
+  gem 'rb-notifu', '0.0.4'
+  gem 'win32console', '1.3.0'
+  gem 'factory_girl_rails', '4.1.0'
+end
+2. bundle install
+3. Create spec/factories.rb file
+FactoryGirl.define do
+  factory :user do
+    name     "Rajan Punchouty"
+    email    "rajan@ezzie.in"
+    password "foobar"
+    password_confirmation "foobar"
+  end
+end
+
+12. Open spec/requests/user_pages_spec.rb
+describe "profile page" do
+    let(:user) { FactoryGirl.create(:user) }
+    before { visit user_path(user) }
+
+    it { should have_selector('h1',    text: user.name) }
+    it { should have_selector('title', text: user.name) }
+  end
+  
+GRAVATAR
+1. Show.html.erb
+<% provide(:title, @user.name) %>
+<h1>
+  <%= gravatar_for @user %>
+  <%= @user.name %>
+</h1>
+2. User Helper
+module UsersHelper
+  # Returns the Gravatar (http://gravatar.com/) for the given user.
+  def gravatar_for(user)
+    gravatar_id = Digest::MD5::hexdigest(user.email.downcase)
+    gravatar_url = "https://secure.gravatar.com/avatar/#{gravatar_id}"
+    image_tag(gravatar_url, alt: user.name, class: "gravatar")
+  end
+end
+3. Update show.html.erb
+<% provide(:title, @user.name) %>
+<div class="row">
+  <aside class="span4">
+    <section>
+      <h1>
+        <%= gravatar_for @user %>
+        <%= @user.name %>
+      </h1>
+    </section>
+  </aside>
+</div>
+4. Update custom.css.scss
+
