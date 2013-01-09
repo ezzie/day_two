@@ -1,0 +1,301 @@
+User Signup
+1. git checkout -b modeling-users
+2. rails generate controller Users new --no-test-framework
+3. Review the files generated
+4. rails generate integration_test user_pages
+5. Add following tests in user_pages_spec
+require 'spec_helper'
+
+describe "UserPages" do
+  subject { page }
+
+  describe "signup page" do
+    before { visit signup_path }
+
+    it { should have_selector('h1',    text: 'Sign up') }
+    it { should have_selector('title', text: full_title('Sign up')) }
+  end
+end
+6. bundle exec rspec spec/requests/user_pages_spec.rb	
+7. To run all test cases for request - bundle exec rspec spec/requests/. To run all test cases - bundle exec rspec spec/
+8. bundle exec guard
+9. Add "match '/signup',  to: 'users#new'" in routes.rb ***** ANY TIME YOU RUN ROUTES FILE - RERUN GUARD *******
+10. change text for /users/new.html.erb
+<% provide(:title, 'Sign up') %>
+<h1>Sign up</h1>
+<p>Find me in app/views/users/new.html.erb</p>
+11. Assign signup path in home.html.erb - <%= link_to "Sign up now!", '#', class: "btn btn-large btn-primary" %>
+
+User Model
+1. Slide 30
+2. No need for DB skills or SQL skills
+	a. ActiveRecord - ORM tool, with host method for creating, saving, and finding data objects.
+	b. Migrations - data definition written in pure ruby
+3. rails generate model User name:string email:string
+4. Analyse files generates 
+5. Explain pending test case in user_spec
+7. Migration - Plural name of table, timestamps method and no id column (generated automatically).
+8. Advance migrations - http://guides.rubyonrails.org/migrations.html
+	a. change vs up and down
+	b. Database independent way for DDL
+	c. Supporting Data types
+	d. Standalone migrations - rails generate migration AddPartNumberToProducts
+	e. rake db:migrate, db:rollback, db:reset
+9. Model file
+10. Model annotation - Add following in Gemfile
+group :development do
+  gem 'annotate', '2.5.0'
+end
+11. bundle install
+12. bundle exec annotate - look at User class again
+
+Active Record API
+1. Most Useful Tool - rails console (vs rails console --sandbox)
+2. run ruby code - 
+	a. puts ("hello world")
+	b. myname = "rajan"
+	c. puts("hello #{myname}")
+	d. myself = {:name => "Rajan Punchouty", :email => "rajan@ezzie.in"}
+3. Active Record
+	CREATE
+	a. User.new
+	b. user = User.new(name: "Sample User", email: "sample@example.com")
+	c. user.save
+	d. user
+	e. user.name
+	f. user.updated_at
+	g. User.create(name: "A Nother", email: "another@example.org")
+	h. foo = User.create(name: "Foo", email: "foo@bar.com") # written user object itself
+	DELETE
+	i. foo.destroy
+	FIND
+	j. User.find 1
+	k. User.find 3
+	l. me = User.new myself
+	m. me.save
+	n. me
+	o. User.find_by_email("another@example.org")
+	p. User.find_by_name "Rajan Punchouty" # Meta programming
+	q. User.first
+	r. User.last
+	s. User.all
+	UPDATE
+	t. someone = User.first
+	u. someone.email = "someone@example.com"
+	v. someone.save
+	w. someone.email = "Wrong email"
+	x. someone.reload.email
+	y. someone.updated_at
+	z. someone.update_attributes(name: "The Dude", email: "dude@abides.org")
+	
+Basic Validations
+1. On console run
+	a. user = User.new
+	b. user.respond_to?(:name)
+2. Object method - respond_to? Returns true if obj responds to the given method.
+3. Rspec boolean convention translate  @user.respond_to?(:name) -> @user.should respond_to(:name)
+4. Write basic test cases for User
+require 'spec_helper'
+
+describe User do
+
+  before { @user = User.new(name: "Example User", email: "user@example.com") }
+
+  subject { @user }
+
+  it { should respond_to(:name) }
+  it { should respond_to(:email) }
+end
+5. The test fails because non existent test database. Run - rake db:test:prepare
+
+Validations
+
+PRESENCE
+1. Add following test cases - look at nested before 
+require 'spec_helper'
+describe User do
+
+  before do
+    @user = User.new(name: "Example User", email: "user@example.com")
+  end
+
+  subject { @user }
+
+  it { should respond_to(:name) }
+  it { should respond_to(:email) }
+
+  it { should be_valid }
+
+  describe "when name is not present" do
+    before { @user.name = " " }
+    it { should_not be_valid }
+  end
+end
+2. Another Rspec boolean Convention -  whenever an object responds to a boolean method foo?, there is a corresponding test method called be_foo
+3. To pass above test case, change model to
+class User < ActiveRecord::Base 
+  attr_accessible(:name, :email)
+
+  validates(:name, presence: true)
+end
+4. Do following steps on console
+	a. rails console --sandbox
+	b. user = User.new(name: "", email: "validl@example.com")
+	c. user.save # return false
+	d. user.valid? # false
+	e. user.errors.full_messages
+4. Write presence test for email also and do similar changes in User model
+
+LENGTH
+1. Test case
+  describe "when name is too long" do
+    before { @user.name = "a" * 51 }
+    it { should_not be_valid }
+  end
+2. User Model - validates :name,  presence: true, length: { maximum: 50 }
+
+FORMAT
+1. Test cases
+  describe "when email format is invalid" do
+    it "should be invalid" do
+      addresses = %w[user@foo,com user_at_foo.org example.user@foo.
+                     foo@bar_baz.com foo@bar+baz.com]
+      addresses.each do |invalid_address|
+        @user.email = invalid_address
+        @user.should_not be_valid
+      end      
+    end
+  end
+
+  describe "when email format is valid" do
+    it "should be valid" do
+      addresses = %w[user@foo.COM A_US-ER@f.b.org frst.lst@foo.jp a+b@baz.cn]
+      addresses.each do |valid_address|
+        @user.email = valid_address
+        @user.should be_valid
+      end      
+    end
+  end
+2. User Model
+  VALID_EMAIL_REGEX = /\A[\w+\-.]+@[a-z\d\-.]+\.[a-z]+\z/i
+  validates :email, presence: true, format: { with: VALID_EMAIL_REGEX }
+3. Go to - http://rubular.com/ to try out regex
+
+UNIQUNESS
+1. Test case
+  describe "when email address is already taken" do
+    before do
+      user_with_same_email = @user.dup
+      user_with_same_email.save
+    end
+
+    it { should_not be_valid }
+  end
+2. User Model
+validates :email, presence: true, format: { with: VALID_EMAIL_REGEX },
+                    uniqueness: true
+3. dup(tainted) vs clone (frozen and tainted) 
+4. Look at use of before
+5. CHanging test case for mix case
+  describe "when email address is already taken" do
+    before do
+      user_with_same_email = @user.dup
+      user_with_same_email.email = @user.email.upcase
+      user_with_same_email.save
+    end
+
+    it { should_not be_valid }
+  end
+6. User model
+validates :email, presence: true, format: { with: VALID_EMAIL_REGEX },
+                    uniqueness: { case_sensitive: false }
+7. Uniquness Issue at middle ties - valid and save method
+8. rails generate migration add_index_to_users_email
+9. Add following code to migration
+class AddIndexToUsersEmail < ActiveRecord::Migration
+  def change
+    add_index :users, :email, unique: true
+  end
+end
+10. bundle exec rake db:migrate
+11. Many databases don't support case insensitive indices. Use call back to resolve this
+12. Add folliwng line in User model
+class User < ActiveRecord::Base 
+  attr_accessible :name, :email
+
+  before_save { |user| user.email = email.downcase }
+  .
+  .
+  .
+end
+13. For other call back - http://api.rubyonrails.org/v3.2.0/classes/ActiveRecord/Callbacks.html
+14. Database indices - discusion
+
+# == Schema Information
+#
+# Table name: users
+#
+#  id         :integer          not null, primary key
+#  name       :string(255)
+#  email      :string(255)
+#  created_at :datetime         not null
+#  updated_at :datetime         not null
+#
+
+require 'spec_helper'
+
+describe User do
+  before { @user = User.new(name: "Example User", email: "user@example.com") }
+
+  subject { @user }
+
+  it { should respond_to(:name) }
+  it { should respond_to(:email) }
+  it { should be_valid }
+
+  describe "when name is not present" do
+    before { @user.name = " " }
+    it { should_not be_valid }
+  end
+  
+  describe "when email is not present" do
+    before { @user.email = " " }
+    it { should_not be_valid }
+  end
+  
+  describe "when name is too long" do
+    before { @user.name = "a" * 51 }
+    it { should_not be_valid }
+  end
+  
+  describe "when email format is invalid" do
+    it "should be invalid" do
+      addresses = %w[user@foo,com user_at_foo.org example.user@foo.
+                     foo@bar_baz.com foo@bar+baz.com]
+      addresses.each do |invalid_address|
+        @user.email = invalid_address
+        @user.should_not be_valid
+      end      
+    end
+  end
+
+  describe "when email format is valid" do
+    it "should be valid" do
+      addresses = %w[user@foo.COM A_US-ER@f.b.org frst.lst@foo.jp a+b@baz.cn]
+      addresses.each do |valid_address|
+        @user.email = valid_address
+        @user.should be_valid
+      end      
+    end
+  end
+  
+  describe "when email address is already taken" do
+    before do
+      user_with_same_email = @user.dup
+      user_with_same_email.email = @user.email.upcase
+      user_with_same_email.save
+    end
+
+    it { should_not be_valid }
+  end
+end
