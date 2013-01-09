@@ -64,7 +64,9 @@
       end
 8. git add .
 9. git commit -m"layout complete"
-10. git push
+10. git checkout master
+11. git merge layout
+12. git push
       
 # rspec file
 require 'spec_helper'
