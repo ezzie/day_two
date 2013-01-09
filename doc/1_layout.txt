@@ -1,0 +1,88 @@
+0. enviornement issues w.r.t test frame work and bundel install vs bundle update
+
+0. Open application.html.erb and discuss link_to method (Rail helper to create links)
+http://api.rubyonrails.org/classes/ActionView/Helpers/UrlHelper.html#method-i-link_to - link_to(*args, &block)
+link_to ("Home",    '#')  
+link_to ("training application", '#', {id: "logo"})
+link_to ("link text", "URI", "Optional hash for html/css attributes")
+
+2. Similarly open home.html.erb
+link_to ("Sign up now!", '#', class: "btn btn-large btn-primary")
+link_to (image_tag("rails.png", alt: "Rails"), 'http://rubyonrails.org/)
+Show source code generated for each link_to invocation
+
+PARTIALS
+1. Partials - To manage reusablty in .html.erb file
+# application.html.erb
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= full_title(yield(:title)) %></title>
+    <%= stylesheet_link_tag    "application", media: "all" %>
+    <%= javascript_include_tag "application" %>
+    <%= csrf_meta_tags %>
+    <%= render 'layouts/shim' %>    
+  </head>
+  <body>
+    <%= render 'layouts/header' %>
+    <div class="container">
+      <%= yield %>      
+      <%= render 'layouts/footer' %>
+    </div>
+  </body>
+</html>
+
+# layout/_shim.html.erb
+<!--[if lt IE 9]>
+<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+
+# layout/_header.html.erb
+<header class="navbar navbar-fixed-top navbar-inverse">
+  <div class="navbar-inner">
+    <div class="container">
+      <%= link_to "sample app", '#', id: "logo" %>
+      <nav>
+        <ul class="nav pull-right">
+          <li><%= link_to "Home",    '#' %></li>
+          <li><%= link_to "Help",    '#' %></li>
+          <li><%= link_to "Sign in", '#' %></li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+</header>
+
+2. <%= render 'layouts/shim' %> - is at the end outputing string
+3. underscore is convention
+4. Append following css
+/* footer */
+
+footer {
+  margin-top: 45px;
+  padding-top: 5px;
+  border-top: 1px solid #eaeaea;
+  color: #999;
+}
+
+footer a {
+  color: #555;
+}  
+
+footer a:hover { 
+  color: #222;
+}
+
+footer small {
+  float: left;
+}
+
+footer ul {
+  float: right;
+  list-style: none;
+}
+
+footer ul li {
+  float: left;
+  margin-left: 10px;
+}

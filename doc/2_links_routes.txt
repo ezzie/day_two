@@ -1,0 +1,107 @@
+0. Slide 29
+1. Remove hard coding in test cases, e.g. Change "visit '/static_pages/about'" to "visit about_path"
+2. Replace "get 'static_pages/help'" with "match '/help', to: 'static_pages#help'"
+  root to: 'static_pages#home'
+  match '/help',    to: 'static_pages#help'
+  match '/about',   to: 'static_pages#about'
+  match '/contact', to: 'static_pages#contact'
+3. Remove index.html from public folder - git rm /public/index.html
+4. Change to named route in header
+<header class="navbar navbar-fixed-top navbar-inverse">
+  <div class="navbar-inner">
+    <div class="container">
+      <%= link_to "Training for Professionals", '#', id: "logo" %>
+      <nav>
+        <ul class="nav pull-right">
+          <li><%= link_to "Home",    root_path %></li>
+          <li><%= link_to "Help",    help_path %></li>
+          <li><%= link_to "Sign in", '#' %></li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+</header>
+5. Change to named route in footer
+<footer class="footer">
+  <small>
+    <a href="http://github.com/ezzie">Ruby on Rails Tutorial</a>
+    by Ezzie Infosystems
+  </small>
+  <nav>
+    <ul>
+      <li><%= link_to "About",   about_path %></li>
+      <li><%= link_to "Contact", contact_path %></li>
+      <li><a href="http://guides.rubyonrails.org/">Guides</a></li>
+    </ul>
+  </nav>
+</footer>
+7. rake routes
+6. Changing test cases - reusability with fixtures
+  describe "Home page" do
+    it "should work" do
+      get root_path
+      response.status.should be(200)
+    end
+    describe "visits" do
+      before { visit root_path }
+      it "should have the content 'Ruby on Rails Training'" do
+        page.should have_content('Ruby on Rails Training')
+      end
+      it "should have the h1 'Training Application'" do
+        page.should have_selector('h1', :text => 'Training Application')
+      end
+      it "should have the base title" do
+        page.should have_selector('title', :text => "#{base_title}")
+      end
+      it "should not have a custom page title" do
+        page.should_not have_selector('title', :text => "| Home")
+      end
+    end
+  end
+7. Another source of duplication
+	  it "should have the content 'Ruby on Rails Training'" do
+        page.should have_content('Ruby on Rails Training')
+      end
+8. git add .
+9. git commit -m"layout complete"
+10. git push
+      
+# rspec file
+require 'spec_helper'
+
+describe "StaticPages" do
+  subject { page }
+  let(:base_title) { "Ruby on Rails Training App" }
+  
+  describe "Home page" do
+    it "should work" do
+      get root_path
+      response.status.should be(200)
+    end
+    describe "visits" do
+      before { visit root_path }
+      it { should have_content('Ruby on Rails Training') }
+      it { should have_selector('h1', :text => 'Training Application') }
+      it { should have_selector('title', :text => "#{base_title}") }
+      it { should_not have_selector('title', :text => "| Home") }
+    end
+  end
+  
+  describe "Help page" do
+    before { visit help_path }
+    it { should have_selector('h1', :text => "Help") }
+    it { should have_selector('title', :text => "#{base_title} | Help") }
+  end
+  
+  describe "About page" do
+    before { visit about_path }
+    it { should have_selector('h1', :text => 'About Us') }
+    it { should have_selector('title', :text => "#{base_title} | About Us") }
+  end
+  
+  describe "Contact page" do
+    before { visit contact_path }
+    it { should have_selector('h1', :text => 'Contact') }
+    it { should have_selector('title', :text => "#{base_title} | Contact") }
+  end
+end
